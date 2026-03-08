@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Translation {
+  id         Int         @id @default(autoincrement())
+  code       String      @unique
+  name       String
+  license    String?
+  source     String?
+  verseTexts VerseText[]
+  createdAt  DateTime    @default(now())
+}
+
+model Book {
+  id        Int       @id @default(autoincrement())
+  slug      String    @unique
+  name      String
+  testament Testament
+  order     Int       @unique
+  verses    Verse[]
+}
+
+model Verse {
+  id      Int    @id @default(autoincrement())
+  bookId  Int
+  chapter Int
+  verse   Int
+
+  book  Book        @relation(fields: [bookId], references: [id])
+  texts VerseText[]
+
+  @@unique([bookId, chapter, verse])
+  @@index([bookId, chapter])
+}
+
+model VerseText {
+  id            Int         @id @default(autoincrement())
+  verseId       Int
+  translationId Int
+  text          String
+
+  verse       Verse       @relation(fields: [verseId], references: [id])
+  translation Translation @relation(fields: [translationId], references: [id])
+
+  @@unique([verseId, translationId])
+}
+
+enum Testament {
+  OLD
+  NEW
+}
