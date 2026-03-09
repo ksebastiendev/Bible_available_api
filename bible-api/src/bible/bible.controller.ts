@@ -114,8 +114,9 @@ export class BibleController {
   @ApiQuery({
     name: 'ref',
     required: true,
-    description: 'Reference in format "bookSlug chapter:verse"',
-    example: 'genese 1:1',
+    description:
+      'Reference in formats like "Genese 1", "Genese chapitre 1", "Gn 1", "Genese 2:3", "Genese 2 verset 3"',
+    example: 'Genese 1',
   })
   @ApiQuery({
     name: 'translation',

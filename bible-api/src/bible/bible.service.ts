@@ -114,6 +114,10 @@ export class BibleService implements OnModuleDestroy {
   async getVerseByReference(reference: string, translationCode: string) {
     const parsed = parseReference(reference);
 
+    if (parsed.type === 'chapter') {
+      return this.getChapterVerses(parsed.bookSlug, parsed.chapter, translationCode);
+    }
+
     const result = await this.prisma.verse.findFirst({
       where: {
         book: {

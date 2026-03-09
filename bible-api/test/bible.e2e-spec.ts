@@ -81,6 +81,41 @@ describe('Bible V1 (e2e)', () => {
     );
   });
 
+  it('GET /v1/bible/ref returns full chapter for chapter-only references', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/v1/bible/ref')
+      .query({ ref: 'Gn 1' })
+      .expect(200);
+
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        chapter: 1,
+        book: expect.objectContaining({
+          slug: 'genese',
+        }),
+      }),
+    );
+    expect(Array.isArray(response.body.verses)).toBe(true);
+    expect(response.body.verses.length).toBeGreaterThan(0);
+  });
+
+  it('GET /v1/bible/ref supports chapter+verset format', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/v1/bible/ref')
+      .query({ ref: 'Genese 2 verset 3' })
+      .expect(200);
+
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        chapter: 2,
+        verse: 3,
+        book: expect.objectContaining({
+          slug: 'genese',
+        }),
+      }),
+    );
+  });
+
   it('GET /v1/bible/ref returns 400 for invalid reference format', async () => {
     await request(app.getHttpServer())
       .get('/v1/bible/ref')
