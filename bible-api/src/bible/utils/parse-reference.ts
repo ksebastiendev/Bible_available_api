@@ -1,7 +1,8 @@
 export type ParsedReference = {
   bookSlug: string;
   chapter: number;
-  verse: number;
+  verse?: number;
+  type: 'chapter' | 'verse';
 };
 
 export class InvalidReferenceError extends Error {
@@ -15,6 +16,7 @@ const BOOK_ALIAS_TO_SLUG: Record<string, string> = {
   jn: 'jean',
   jean: 'jean',
   jn1: 'jean',
+  gn: 'genese',
   ge: 'genese',
   gen: 'genese',
   genese: 'genese',
@@ -30,29 +32,57 @@ function normalizeBookKey(raw: string): string {
 }
 
 export function parseReference(input: string): ParsedReference {
-  const value = input.trim();
-  const match = value.match(/^(.+?)\s*(\d+)\s*[:.]\s*(\d+)$/i);
+  const value = input
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\bchapitre\b/gi, ' ')
+    .replace(/\bverset\b/gi, ':')
+    .replace(/\s+/g, ' ')
+    .trim();
 
-  if (!match) {
-    throw new InvalidReferenceError(
-      'Invalid reference format. Use examples like "Jn 3:16", "Jean 3:16", "Jn.3.16", or "genese 1:1".',
-    );
+  const verseMatch = value.match(/^(.+?)\s*(\d+)\s*[:.]\s*(\d+)$/i);
+  if (verseMatch) {
+    const rawBook = verseMatch[1];
+    const chapter = Number(verseMatch[2]);
+    const verse = Number(verseMatch[3]);
+
+    if (!Number.isInteger(chapter) || !Number.isInteger(verse) || chapter < 1 || verse < 1) {
+      throw new InvalidReferenceError(
+        'Invalid chapter or verse number. Both must be positive integers.',
+      );
+    }
+
+    const bookKey = normalizeBookKey(rawBook);
+    const bookSlug = BOOK_ALIAS_TO_SLUG[bookKey] ?? bookKey;
+
+    if (!bookSlug) {
+      throw new InvalidReferenceError(`Unknown book in reference: "${rawBook}".`);
+    }
+
+    return { bookSlug, chapter, verse, type: 'verse' };
   }
 
-  const rawBook = match[1];
-  const chapter = Number(match[2]);
-  const verse = Number(match[3]);
+  const chapterMatch = value.match(/^(.+?)\s+(\d+)$/i);
+  if (chapterMatch) {
+    const rawBook = chapterMatch[1];
+    const chapter = Number(chapterMatch[2]);
 
-  if (!Number.isInteger(chapter) || !Number.isInteger(verse) || chapter < 1 || verse < 1) {
-    throw new InvalidReferenceError('Invalid chapter or verse number. Both must be positive integers.');
+    if (!Number.isInteger(chapter) || chapter < 1) {
+      throw new InvalidReferenceError('Invalid chapter number. It must be a positive integer.');
+    }
+
+    const bookKey = normalizeBookKey(rawBook);
+    const bookSlug = BOOK_ALIAS_TO_SLUG[bookKey] ?? bookKey;
+
+    if (!bookSlug) {
+      throw new InvalidReferenceError(`Unknown book in reference: "${rawBook}".`);
+    }
+
+    return { bookSlug, chapter, type: 'chapter' };
   }
 
-  const bookKey = normalizeBookKey(rawBook);
-  const bookSlug = BOOK_ALIAS_TO_SLUG[bookKey] ?? bookKey;
-
-  if (!bookSlug) {
-    throw new InvalidReferenceError(`Unknown book in reference: "${rawBook}".`);
-  }
-
-  return { bookSlug, chapter, verse };
+  throw new InvalidReferenceError(
+    'Invalid reference format. Use examples like "Genese 1", "Genese chapitre 1", "Gn 1", "Genese 2:3", or "Genese 2 verset 3".',
+  );
 }
