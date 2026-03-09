@@ -94,4 +94,30 @@ describe('Bible V1 (e2e)', () => {
       .query({ ref: 'genese 999:1' })
       .expect(404);
   });
+
+  it('GET /v1/bible/search returns paginated results', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/v1/bible/search')
+      .query({ q: 'Dieu', page: 1, limit: 5 })
+      .expect(200);
+
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        page: 1,
+        limit: 5,
+      }),
+    );
+    expect(Array.isArray(response.body.results)).toBe(true);
+    expect(response.body.results.length).toBeGreaterThan(0);
+    expect(response.body.results[0]).toEqual(
+      expect.objectContaining({
+        bookSlug: expect.any(String),
+        bookName: expect.any(String),
+        chapter: expect.any(Number),
+        verse: expect.any(Number),
+        text: expect.any(String),
+        translationCode: 'LSG1910',
+      }),
+    );
+  });
 });

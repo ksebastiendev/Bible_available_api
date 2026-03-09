@@ -165,4 +165,66 @@ export class BibleController {
 
     return result;
   }
+
+  @ApiOperation({ summary: 'Search verses by text query' })
+  @ApiQuery({
+    name: 'q',
+    required: true,
+    description: 'Search query string',
+    example: 'Dieu',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: 'Page number (starts at 1)',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Items per page (max 100)',
+    example: 20,
+  })
+  @ApiOkResponse({
+    description: 'Paginated verse search results',
+    schema: {
+      example: {
+        page: 1,
+        limit: 20,
+        total: 2,
+        results: [
+          {
+            bookSlug: 'genese',
+            bookName: 'Genèse',
+            chapter: 1,
+            verse: 1,
+            text: 'Au commencement, Dieu créa les cieux et la terre.',
+            translationCode: 'LSG1910',
+          },
+        ],
+      },
+    },
+  })
+  @Get('bible/search')
+  async searchBible(
+    @Query('q') q?: string,
+    @Query('page') pageRaw?: string,
+    @Query('limit') limitRaw?: string,
+  ) {
+    if (!q || !q.trim()) {
+      throw new BadRequestException('Missing q query parameter');
+    }
+
+    const page = pageRaw ? Number(pageRaw) : 1;
+    const limit = limitRaw ? Number(limitRaw) : 20;
+
+    if (!Number.isInteger(page) || page < 1) {
+      throw new BadRequestException('page must be a positive integer');
+    }
+    if (!Number.isInteger(limit) || limit < 1) {
+      throw new BadRequestException('limit must be a positive integer');
+    }
+
+    return this.bibleService.searchVerses(q.trim(), page, Math.min(limit, 100));
+  }
 }
