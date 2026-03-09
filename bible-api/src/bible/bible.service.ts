@@ -158,4 +158,66 @@ export class BibleService implements OnModuleDestroy {
       text: result.texts[0]?.text ?? null,
     };
   }
+
+  async searchVerses(query: string, page: number, limit: number, translationCode = 'LSG1910') {
+    const skip = (page - 1) * limit;
+
+    const where = {
+      text: {
+        contains: query,
+        mode: 'insensitive' as const,
+      },
+      translation: {
+        code: translationCode,
+      },
+    };
+
+    const [total, matches] = await Promise.all([
+      this.prisma.verseText.count({ where }),
+      this.prisma.verseText.findMany({
+        where,
+        select: {
+          text: true,
+          translation: {
+            select: {
+              code: true,
+            },
+          },
+          verse: {
+            select: {
+              chapter: true,
+              verse: true,
+              book: {
+                select: {
+                  slug: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: [
+          { verse: { book: { order: 'asc' } } },
+          { verse: { chapter: 'asc' } },
+          { verse: { verse: 'asc' } },
+        ],
+        skip,
+        take: limit,
+      }),
+    ]);
+
+    return {
+      page,
+      limit,
+      total,
+      results: matches.map((item) => ({
+        bookSlug: item.verse.book.slug,
+        bookName: item.verse.book.name,
+        chapter: item.verse.chapter,
+        verse: item.verse.verse,
+        text: item.text,
+        translationCode: item.translation.code,
+      })),
+    };
+  }
 }
