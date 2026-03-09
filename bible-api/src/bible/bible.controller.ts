@@ -16,6 +16,7 @@ import {
 } from '@nestjs/swagger';
 import { BibleService } from './bible.service';
 import { InvalidReferenceError } from './utils/parse-reference';
+import { InvalidPassageError } from './utils/parse-passage';
 
 @ApiTags('Bible V1')
 @Controller('v1')
@@ -227,5 +228,86 @@ export class BibleController {
     }
 
     return this.bibleService.searchVerses(q.trim(), page, Math.min(limit, 100));
+  }
+
+  @ApiOperation({ summary: 'Get Bible passage(s) from challenge-style references' })
+  @ApiQuery({
+    name: 'ref',
+    required: true,
+    description:
+      'Passage reference, e.g. "Job10-11", "Luc19:29-40", "Job10-11,Luc19:29-40", "Genese 1"',
+    example: 'Job10-11,Luc19:29-40',
+  })
+  @ApiQuery({
+    name: 'translation',
+    required: false,
+    description: 'Translation code',
+    example: 'LSG1910',
+  })
+  @ApiOkResponse({
+    description: 'Structured passage response with ordered segments',
+    schema: {
+      example: {
+        reference: 'Job10-11,Luc19:29-40',
+        translationCode: 'LSG1910',
+        segments: [
+          {
+            type: 'chapter_range',
+            book: { slug: 'job', name: 'Job' },
+            fromChapter: 10,
+            toChapter: 11,
+            verses: [
+              {
+                chapter: 10,
+                verse: 1,
+                text: 'Mon âme est dégoûtée de la vie...',
+                translationCode: 'LSG1910',
+              },
+            ],
+          },
+          {
+            type: 'verse_range',
+            book: { slug: 'luc', name: 'Luc' },
+            chapter: 19,
+            fromVerse: 29,
+            toVerse: 40,
+            verses: [
+              {
+                chapter: 19,
+                verse: 29,
+                text: 'Lorsqu’il approcha de Bethphagé...',
+                translationCode: 'LSG1910',
+              },
+            ],
+          },
+        ],
+      },
+    },
+  })
+  @Get('bible/passage')
+  async getPassage(
+    @Query('ref') ref?: string,
+    @Query('translation') translationCode = 'LSG1910',
+  ) {
+    if (!ref) {
+      throw new BadRequestException('Missing ref query parameter');
+    }
+
+    let result;
+    try {
+      result = await this.bibleService.getPassageByReference(ref, translationCode);
+    } catch (error) {
+      if (error instanceof InvalidPassageError) {
+        throw new BadRequestException(error.message);
+      }
+
+      throw error;
+    }
+
+    if (!result) {
+      throw new NotFoundException('Passage not found');
+    }
+
+    return result;
   }
 }

@@ -2,6 +2,7 @@ import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@prisma/client';
 import { parseReference } from './utils/parse-reference';
+import { parsePassage } from './utils/parse-passage';
 
 @Injectable()
 export class BibleService implements OnModuleDestroy {
@@ -222,6 +223,152 @@ export class BibleService implements OnModuleDestroy {
         text: item.text,
         translationCode: item.translation.code,
       })),
+    };
+  }
+
+  async getPassageByReference(reference: string, translationCode = 'LSG1910') {
+    const parsed = parsePassage(reference);
+    const bookCache = new Map<string, { id: number; slug: string; name: string }>();
+
+    const segments = [] as Array<Record<string, unknown>>;
+
+    for (const segment of parsed.segments) {
+      const cachedBook = bookCache.get(segment.bookSlug);
+      let book = cachedBook;
+      if (!book) {
+        const fetchedBook = await this.prisma.book.findUnique({
+          where: { slug: segment.bookSlug },
+          select: { id: true, slug: true, name: true },
+        });
+
+        if (!fetchedBook) {
+          return null;
+        }
+
+        book = fetchedBook;
+        bookCache.set(segment.bookSlug, book);
+      }
+
+      if (segment.type === 'single_chapter') {
+        const verses = await this.prisma.verse.findMany({
+          where: {
+            bookId: book.id,
+            chapter: segment.chapter,
+          },
+          select: {
+            chapter: true,
+            verse: true,
+            texts: {
+              where: { translation: { code: translationCode } },
+              select: { text: true, translation: { select: { code: true } } },
+              take: 1,
+            },
+          },
+          orderBy: [{ chapter: 'asc' }, { verse: 'asc' }],
+        });
+
+        if (verses.length === 0) {
+          return null;
+        }
+
+        segments.push({
+          type: 'single_chapter',
+          book,
+          chapter: segment.chapter,
+          verses: verses.map((item) => ({
+            chapter: item.chapter,
+            verse: item.verse,
+            text: item.texts[0]?.text ?? null,
+            translationCode: item.texts[0]?.translation.code ?? translationCode,
+          })),
+        });
+      }
+
+      if (segment.type === 'chapter_range') {
+        const verses = await this.prisma.verse.findMany({
+          where: {
+            bookId: book.id,
+            chapter: {
+              gte: segment.fromChapter,
+              lte: segment.toChapter,
+            },
+          },
+          select: {
+            chapter: true,
+            verse: true,
+            texts: {
+              where: { translation: { code: translationCode } },
+              select: { text: true, translation: { select: { code: true } } },
+              take: 1,
+            },
+          },
+          orderBy: [{ chapter: 'asc' }, { verse: 'asc' }],
+        });
+
+        if (verses.length === 0) {
+          return null;
+        }
+
+        segments.push({
+          type: 'chapter_range',
+          book,
+          fromChapter: segment.fromChapter,
+          toChapter: segment.toChapter,
+          verses: verses.map((item) => ({
+            chapter: item.chapter,
+            verse: item.verse,
+            text: item.texts[0]?.text ?? null,
+            translationCode: item.texts[0]?.translation.code ?? translationCode,
+          })),
+        });
+      }
+
+      if (segment.type === 'verse_range') {
+        const verses = await this.prisma.verse.findMany({
+          where: {
+            bookId: book.id,
+            chapter: segment.chapter,
+            verse: {
+              gte: segment.fromVerse,
+              lte: segment.toVerse,
+            },
+          },
+          select: {
+            chapter: true,
+            verse: true,
+            texts: {
+              where: { translation: { code: translationCode } },
+              select: { text: true, translation: { select: { code: true } } },
+              take: 1,
+            },
+          },
+          orderBy: [{ chapter: 'asc' }, { verse: 'asc' }],
+        });
+
+        if (verses.length === 0) {
+          return null;
+        }
+
+        segments.push({
+          type: 'verse_range',
+          book,
+          chapter: segment.chapter,
+          fromVerse: segment.fromVerse,
+          toVerse: segment.toVerse,
+          verses: verses.map((item) => ({
+            chapter: item.chapter,
+            verse: item.verse,
+            text: item.texts[0]?.text ?? null,
+            translationCode: item.texts[0]?.translation.code ?? translationCode,
+          })),
+        });
+      }
+    }
+
+    return {
+      reference: parsed.originalReference,
+      translationCode,
+      segments,
     };
   }
 }
