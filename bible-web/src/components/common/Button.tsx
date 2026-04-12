@@ -12,5 +12,10 @@ export function Button({ variant = "primary", className = "", ...props }: Button
       ? "bg-[var(--ink-900)] text-white hover:bg-[var(--ink-700)] active:bg-[var(--ink-800)] active:text-white focus-visible:text-white"
       : "border border-[var(--ink-300)] bg-[var(--paper-100)] text-[color:var(--ink-900)] hover:bg-[var(--paper-200)] active:bg-[var(--paper-200)] active:text-[color:var(--ink-900)]";
 
-  return <button className={`${base} ${look} ${className}`.trim()} {...props} />;
+  const forcedStyle =
+    variant === "primary"
+      ? { color: "#ffffff", ...(props.style ?? {}) }
+      : (props.style ?? undefined);
+
+  return <button className={`${base} ${look} ${className}`.trim()} {...props} style={forcedStyle} />;
 }

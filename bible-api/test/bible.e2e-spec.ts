@@ -22,7 +22,9 @@ describe('Bible V1 (e2e)', () => {
   });
 
   it('GET /v1/translations returns at least LSG1910', async () => {
-    const response = await request(app.getHttpServer()).get('/v1/translations').expect(200);
+    const response = await request(app.getHttpServer())
+      .get('/v1/translations')
+      .expect(200);
 
     expect(Array.isArray(response.body)).toBe(true);
     expect(response.body.length).toBeGreaterThan(0);
@@ -36,7 +38,9 @@ describe('Bible V1 (e2e)', () => {
   });
 
   it('GET /v1/bible/books returns ordered books for default translation', async () => {
-    const response = await request(app.getHttpServer()).get('/v1/bible/books').expect(200);
+    const response = await request(app.getHttpServer())
+      .get('/v1/bible/books')
+      .expect(200);
 
     expect(Array.isArray(response.body)).toBe(true);
     expect(response.body.length).toBeGreaterThan(0);
@@ -45,6 +49,30 @@ describe('Bible V1 (e2e)', () => {
         slug: 'genese',
       }),
     );
+  });
+
+  it('GET /v1/bible/books/:bookSlug returns the full book grouped by chapters', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/v1/bible/books/genese')
+      .expect(200);
+
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        translationCode: 'LSG1910',
+        book: expect.objectContaining({
+          slug: 'genese',
+        }),
+      }),
+    );
+    expect(Array.isArray(response.body.chapters)).toBe(true);
+    expect(response.body.chapters.length).toBeGreaterThan(0);
+    expect(response.body.chapters[0]).toEqual(
+      expect.objectContaining({
+        chapter: 1,
+      }),
+    );
+    expect(Array.isArray(response.body.chapters[0].verses)).toBe(true);
+    expect(response.body.chapters[0].verses.length).toBeGreaterThan(0);
   });
 
   it('GET /v1/bible/books/:bookSlug/chapters/:chapter returns chapter verses', async () => {
@@ -218,8 +246,12 @@ describe('Bible V1 (e2e)', () => {
 
     expect(Array.isArray(response.body.segments)).toBe(true);
     expect(response.body.segments.length).toBe(2);
-    expect(response.body.segments[0]).toEqual(expect.objectContaining({ type: 'chapter_range' }));
-    expect(response.body.segments[1]).toEqual(expect.objectContaining({ type: 'verse_range' }));
+    expect(response.body.segments[0]).toEqual(
+      expect.objectContaining({ type: 'chapter_range' }),
+    );
+    expect(response.body.segments[1]).toEqual(
+      expect.objectContaining({ type: 'verse_range' }),
+    );
   });
 
   it('GET /v1/bible/passage returns 400 for invalid format', async () => {

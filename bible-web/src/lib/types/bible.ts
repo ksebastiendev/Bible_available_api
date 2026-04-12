@@ -52,6 +52,19 @@ export interface PassageResultPayload {
   [key: string]: unknown;
 }
 
+export interface BookChapter {
+  chapter: number;
+  verses: VerseLine[];
+  [key: string]: unknown;
+}
+
+export interface BookResultPayload {
+  translationCode?: string;
+  book?: BibleBook;
+  chapters: BookChapter[];
+  [key: string]: unknown;
+}
+
 export interface SearchResultItem {
   bookSlug: string;
   bookName: string;

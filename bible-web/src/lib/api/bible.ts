@@ -2,6 +2,7 @@ import { API_ENDPOINTS } from "@/lib/api/endpoints";
 import { apiFetch } from "@/lib/api/client";
 import {
   BibleBook,
+  BookResultPayload,
   PassageResultPayload,
   ReferenceResultPayload,
   SearchResultPayload,
@@ -60,6 +61,15 @@ export async function getBooks(translation = "LSG1910"): Promise<BibleBook[]> {
   const query = buildQueryParams({ translation });
   const payload = await apiFetch<unknown>(`${API_ENDPOINTS.books}${query}`);
   return extractArray<BibleBook>(payload, ["data", "items", "results", "books"]);
+}
+
+export async function getBook(params: {
+  slug: string;
+  translation?: string;
+}): Promise<BookResultPayload> {
+  const query = buildQueryParams({ translation: params.translation });
+  const payload = await apiFetch<unknown>(`${API_ENDPOINTS.book}/${params.slug}${query}`);
+  return extractObject<BookResultPayload>(payload);
 }
 
 export async function getReference(params: {

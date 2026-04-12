@@ -50,7 +50,8 @@ export default function HomePage() {
           <Card key={card.href} title={card.title} description={card.description}>
             <Link
               href={card.href}
-              className="inline-flex rounded-md bg-[var(--ink-900)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--ink-700)] active:bg-[var(--ink-800)] active:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-300)]"
+              className="inline-flex rounded-md bg-[var(--ink-900)] px-4 py-2 text-sm font-semibold !text-white transition hover:bg-[var(--ink-700)] active:bg-[var(--ink-800)] active:!text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-300)]"
+              style={{ color: "#ffffff", WebkitTextFillColor: "#ffffff" }}
             >
               Open {card.title}
             </Link>

@@ -8,7 +8,9 @@ async function bootstrap() {
 
   const defaultCorsOrigins = ['http://localhost:3001', 'http://127.0.0.1:3001'];
   const configuredCorsOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
+    ? process.env.CORS_ORIGINS.split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean)
     : defaultCorsOrigins;
 
   app.enableCors({

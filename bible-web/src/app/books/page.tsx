@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Card } from "@/components/common/Card";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -10,6 +11,7 @@ import { useBooks } from "@/lib/hooks/useBooks";
 import { useTranslations } from "@/lib/hooks/useTranslations";
 
 export default function BooksPage() {
+  const router = useRouter();
   const { translations } = useTranslations();
   const [translation, setTranslation] = useState("LSG1910");
   const { books, loading, error } = useBooks(translation);
@@ -22,9 +24,13 @@ export default function BooksPage() {
     return translations;
   }, [translations]);
 
+  function onSelectBook(bookSlug: string) {
+    router.push(`/book?slug=${bookSlug}&translation=${translation}`);
+  }
+
   return (
     <section className="space-y-5">
-      <h1 className="text-3xl font-semibold text-[var(--ink-900)]">Books</h1>
+      <h1 className="text-3xl font-semibold text-(--ink-900)">Books</h1>
 
       <Card title="Options" description="Load books by translation">
         <TranslationSelector
@@ -41,13 +47,21 @@ export default function BooksPage() {
       {!loading && !error && books.length > 0 ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {books.map((book) => (
-            <Card
+            <button
               key={book.slug}
-              title={book.name}
-              description={`${book.slug} • ${book.testament ?? ""}`.trim()}
+              type="button"
+              onClick={() => onSelectBook(book.slug)}
+              className="cursor-pointer text-left focus-visible:outline-none transition hover:shadow-lg"
             >
-              <p className="text-sm text-[var(--ink-700)]">Canonical order: {book.order ?? "N/A"}</p>
-            </Card>
+              <Card title={book.name} description={`${book.slug} • ${book.testament ?? ""}`.trim()}>
+                <div className="space-y-2">
+                  <p className="text-sm text-(--ink-700)">Canonical order: {book.order ?? "N/A"}</p>
+                  <p className="text-sm font-medium text-(--accent-500)">
+                    Click to view the full book
+                  </p>
+                </div>
+              </Card>
+            </button>
           ))}
         </div>
       ) : null}

@@ -4,4 +4,5 @@ export const API_ENDPOINTS = {
   reference: "/v1/bible/ref",
   search: "/v1/bible/search",
   passage: "/v1/bible/passage",
+  book: "/v1/bible/books",
 } as const;
