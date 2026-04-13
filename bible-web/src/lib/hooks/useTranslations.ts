@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getTranslations } from "@/lib/api/bible";
 import { ApiError } from "@/lib/types/api";
 import { Translation } from "@/lib/types/bible";
+import { toApiErrorMessage, toUnexpectedErrorMessage } from "@/lib/utils/api-error-message";
 
 export function useTranslations() {
   const [translations, setTranslations] = useState<Translation[]>([]);
@@ -28,11 +29,16 @@ export function useTranslations() {
         }
 
         if (err instanceof ApiError) {
-          setError(`API error (${err.status}) while loading translations.`);
+          setError(
+            toApiErrorMessage(err, {
+              actionLabel: "le chargement des traductions",
+              notFoundHint: "Aucune traduction disponible pour le moment.",
+            }),
+          );
           return;
         }
 
-        setError("Failed to load translations.");
+        setError(toUnexpectedErrorMessage("le chargement des traductions"));
       } finally {
         if (mounted) {
           setLoading(false);

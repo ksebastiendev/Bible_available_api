@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { getBooks } from "@/lib/api/bible";
 import { ApiError } from "@/lib/types/api";
 import { BibleBook } from "@/lib/types/bible";
+import { toApiErrorMessage, toUnexpectedErrorMessage } from "@/lib/utils/api-error-message";
 
 export function useBooks(translation = "LSG1910") {
   const [books, setBooks] = useState<BibleBook[]>([]);
@@ -28,11 +29,16 @@ export function useBooks(translation = "LSG1910") {
         }
 
         if (err instanceof ApiError) {
-          setError(`API error (${err.status}) while loading books.`);
+          setError(
+            toApiErrorMessage(err, {
+              actionLabel: "le chargement des livres",
+              notFoundHint: "Aucun livre trouve pour cette traduction.",
+            }),
+          );
           return;
         }
 
-        setError("Failed to load books.");
+        setError(toUnexpectedErrorMessage("le chargement des livres"));
       } finally {
         if (mounted) {
           setLoading(false);

@@ -17,6 +17,11 @@ const literata = Literata({
 export const metadata: Metadata = {
   title: "Bible Web",
   description: "Frontend app for Bible API endpoints",
+  icons: {
+    icon: "/logo-Bible-available.png",
+    shortcut: "/logo-Bible-available.png",
+    apple: "/logo-Bible-available.png",
+  },
 };
 
 export default function RootLayout({
