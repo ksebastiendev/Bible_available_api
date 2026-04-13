@@ -12,6 +12,7 @@ async function bootstrap() {
     'http://localhost:3001',
     'http://127.0.0.1:3001',
     'https://bible-available-api.vercel.app',
+    'https://bible-available-api.onrender.com',
   ];
   const configuredCorsOrigins = process.env.CORS_ORIGINS
     ? process.env.CORS_ORIGINS.split(',')
