@@ -22,13 +22,28 @@ const BOOK_ALIAS_TO_SLUG: Record<string, string> = {
   genese: 'genese',
 };
 
-function normalizeBookKey(raw: string): string {
+function normalizeBookAliasKey(raw: string): string {
   return raw
     .trim()
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]/g, '');
+}
+
+function normalizeBookSlug(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function resolveBookSlug(rawBook: string): string {
+  const aliasKey = normalizeBookAliasKey(rawBook);
+  return BOOK_ALIAS_TO_SLUG[aliasKey] ?? normalizeBookSlug(rawBook);
 }
 
 export function parseReference(input: string): ParsedReference {
@@ -58,8 +73,7 @@ export function parseReference(input: string): ParsedReference {
       );
     }
 
-    const bookKey = normalizeBookKey(rawBook);
-    const bookSlug = BOOK_ALIAS_TO_SLUG[bookKey] ?? bookKey;
+    const bookSlug = resolveBookSlug(rawBook);
 
     if (!bookSlug) {
       throw new InvalidReferenceError(
@@ -81,8 +95,7 @@ export function parseReference(input: string): ParsedReference {
       );
     }
 
-    const bookKey = normalizeBookKey(rawBook);
-    const bookSlug = BOOK_ALIAS_TO_SLUG[bookKey] ?? bookKey;
+    const bookSlug = resolveBookSlug(rawBook);
 
     if (!bookSlug) {
       throw new InvalidReferenceError(

@@ -1,14 +1,15 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { BookReferenceInput } from "@/components/bible/BookReferenceInput";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
-import { Input } from "@/components/common/Input";
 import { LoadingState } from "@/components/common/LoadingState";
 import { TranslationSelector } from "@/components/bible/TranslationSelector";
 import { ReferenceResult } from "@/components/bible/ReferenceResult";
+import { useBooks } from "@/lib/hooks/useBooks";
 import { useReference } from "@/lib/hooks/useReference";
 import { useTranslations } from "@/lib/hooks/useTranslations";
 
@@ -18,6 +19,7 @@ export default function ReferencePage() {
 
   const [translation, setTranslation] = useState("LSG1910");
   const [reference, setReference] = useState("Jean 3:16");
+  const { books } = useBooks(translation);
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,18 +31,20 @@ export default function ReferencePage() {
 
   return (
     <section className="space-y-5">
-      <h1 className="text-3xl font-semibold text-[var(--ink-900)]">Reference</h1>
+      <h1 className="text-3xl font-semibold text-(--ink-900)">Reference</h1>
 
       <Card title="Find a reference" description="Endpoint: /v1/bible/ref">
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label htmlFor="reference" className="text-sm font-medium text-[var(--ink-700)]">
+            <label htmlFor="reference" className="text-sm font-medium text-(--ink-700)">
               Reference
             </label>
-            <Input
+            <BookReferenceInput
               id="reference"
               value={reference}
-              onChange={(event) => setReference(event.target.value)}
+              onChange={setReference}
+              books={books}
+              mode="reference"
               placeholder="Ex: Genese 1:1"
             />
           </div>

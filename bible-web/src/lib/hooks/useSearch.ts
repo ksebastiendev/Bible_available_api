@@ -4,6 +4,7 @@ import { useState } from "react";
 import { searchBible } from "@/lib/api/bible";
 import { ApiError } from "@/lib/types/api";
 import { SearchResultPayload } from "@/lib/types/bible";
+import { toApiErrorMessage, toUnexpectedErrorMessage } from "@/lib/utils/api-error-message";
 
 export function useSearch() {
   const [data, setData] = useState<SearchResultPayload | null>(null);
@@ -19,9 +20,15 @@ export function useSearch() {
       setData(response);
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(`API error (${err.status}) while searching.`);
+        setError(
+          toApiErrorMessage(err, {
+            actionLabel: "la recherche",
+            invalidHint: "Saisissez au moins un mot de recherche.",
+            notFoundHint: "Aucun verset trouve pour cette recherche.",
+          }),
+        );
       } else {
-        setError("Failed to search verses.");
+        setError(toUnexpectedErrorMessage("la recherche"));
       }
       setData(null);
     } finally {

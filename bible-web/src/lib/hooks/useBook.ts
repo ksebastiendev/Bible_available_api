@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { getBook } from "@/lib/api/bible";
 import { ApiError } from "@/lib/types/api";
 import { BookResultPayload } from "@/lib/types/bible";
+import { toApiErrorMessage, toUnexpectedErrorMessage } from "@/lib/utils/api-error-message";
 
 export function useBook() {
   const [data, setData] = useState<BookResultPayload | null>(null);
@@ -19,9 +20,14 @@ export function useBook() {
       setData(response);
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(`API error (${err.status}) while loading book.`);
+        setError(
+          toApiErrorMessage(err, {
+            actionLabel: "le livre",
+            notFoundHint: "Livre introuvable. Choisissez un livre depuis la liste.",
+          }),
+        );
       } else {
-        setError("Failed to load book.");
+        setError(toUnexpectedErrorMessage("le livre"));
       }
       setData(null);
     } finally {
