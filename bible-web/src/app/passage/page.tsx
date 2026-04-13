@@ -1,14 +1,15 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { BookReferenceInput } from "@/components/bible/BookReferenceInput";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorState } from "@/components/common/ErrorState";
-import { Input } from "@/components/common/Input";
 import { LoadingState } from "@/components/common/LoadingState";
 import { TranslationSelector } from "@/components/bible/TranslationSelector";
 import { PassageViewer } from "@/components/bible/PassageViewer";
+import { useBooks } from "@/lib/hooks/useBooks";
 import { usePassage } from "@/lib/hooks/usePassage";
 import { useTranslations } from "@/lib/hooks/useTranslations";
 
@@ -18,6 +19,7 @@ export default function PassagePage() {
 
   const [translation, setTranslation] = useState("LSG1910");
   const [reference, setReference] = useState("Job10-11,Luc19:29-40");
+  const { books } = useBooks(translation);
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -37,10 +39,12 @@ export default function PassagePage() {
             <label htmlFor="passage-ref" className="text-sm font-medium text-[var(--ink-700)]">
               Passage reference
             </label>
-            <Input
+            <BookReferenceInput
               id="passage-ref"
               value={reference}
-              onChange={(event) => setReference(event.target.value)}
+              onChange={setReference}
+              books={books}
+              mode="passage"
               placeholder="Ex: Job10-11,Luc19:29-40"
             />
           </div>

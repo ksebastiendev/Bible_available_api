@@ -44,7 +44,7 @@ const BOOK_ALIAS_TO_SLUG: Record<string, string> = {
   lk: 'luc',
 };
 
-function normalizeBookKey(raw: string): string {
+function normalizeBookAliasKey(raw: string): string {
   return raw
     .trim()
     .toLowerCase()
@@ -53,9 +53,19 @@ function normalizeBookKey(raw: string): string {
     .replace(/[^a-z0-9]/g, '');
 }
 
+function normalizeBookSlug(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 function resolveBookSlug(rawBook: string): string {
-  const key = normalizeBookKey(rawBook);
-  return BOOK_ALIAS_TO_SLUG[key] ?? key;
+  const aliasKey = normalizeBookAliasKey(rawBook);
+  return BOOK_ALIAS_TO_SLUG[aliasKey] ?? normalizeBookSlug(rawBook);
 }
 
 function toPositiveInt(value: string, label: string): number {
