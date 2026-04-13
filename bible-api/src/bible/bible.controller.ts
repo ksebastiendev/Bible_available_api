@@ -67,6 +67,52 @@ export class BibleController {
     return this.bibleService.listBooks(translationCode);
   }
 
+  @ApiOperation({ summary: 'Get all verses of a book' })
+  @ApiParam({ name: 'bookSlug', description: 'Book slug', example: 'genese' })
+  @ApiQuery({
+    name: 'translation',
+    required: false,
+    description: 'Translation code',
+    example: 'LSG1910',
+  })
+  @ApiOkResponse({
+    description: 'Book payload with chapters and verse texts',
+    schema: {
+      example: {
+        translationCode: 'LSG1910',
+        book: {
+          slug: 'genese',
+          name: 'Genèse',
+          order: 1,
+          testament: 'OLD',
+        },
+        chapters: [
+          {
+            chapter: 1,
+            verses: [
+              {
+                verse: 1,
+                text: 'Au commencement, Dieu créa les cieux et la terre.',
+              },
+            ],
+          },
+        ],
+      },
+    },
+  })
+  @Get('bible/books/:bookSlug')
+  async getBook(
+    @Param('bookSlug') bookSlug: string,
+    @Query('translation') translationCode = 'LSG1910',
+  ) {
+    const result = await this.bibleService.getBook(bookSlug, translationCode);
+    if (!result) {
+      throw new NotFoundException('Book not found');
+    }
+
+    return result;
+  }
+
   @ApiOperation({ summary: 'Get all verses of a chapter' })
   @ApiParam({ name: 'bookSlug', description: 'Book slug', example: 'genese' })
   @ApiParam({ name: 'chapter', description: 'Chapter number', example: 1 })
@@ -103,7 +149,11 @@ export class BibleController {
     @Param('chapter', ParseIntPipe) chapter: number,
     @Query('translation') translationCode = 'LSG1910',
   ) {
-    const result = await this.bibleService.getChapterVerses(bookSlug, chapter, translationCode);
+    const result = await this.bibleService.getChapterVerses(
+      bookSlug,
+      chapter,
+      translationCode,
+    );
     if (!result) {
       throw new NotFoundException('Book or chapter not found');
     }
@@ -150,9 +200,17 @@ export class BibleController {
       throw new BadRequestException('Missing ref query parameter');
     }
 
-    let result;
     try {
-      result = await this.bibleService.getVerseByReference(ref, translationCode);
+      const result = await this.bibleService.getVerseByReference(
+        ref,
+        translationCode,
+      );
+
+      if (!result) {
+        throw new NotFoundException('Reference not found or invalid format');
+      }
+
+      return result;
     } catch (error) {
       if (error instanceof InvalidReferenceError) {
         throw new BadRequestException(error.message);
@@ -160,12 +218,6 @@ export class BibleController {
 
       throw error;
     }
-
-    if (!result) {
-      throw new NotFoundException('Reference not found or invalid format');
-    }
-
-    return result;
   }
 
   @ApiOperation({ summary: 'Search verses by text query' })
@@ -230,7 +282,9 @@ export class BibleController {
     return this.bibleService.searchVerses(q.trim(), page, Math.min(limit, 100));
   }
 
-  @ApiOperation({ summary: 'Get Bible passage(s) from challenge-style references' })
+  @ApiOperation({
+    summary: 'Get Bible passage(s) from challenge-style references',
+  })
   @ApiQuery({
     name: 'ref',
     required: true,
@@ -293,9 +347,17 @@ export class BibleController {
       throw new BadRequestException('Missing ref query parameter');
     }
 
-    let result;
     try {
-      result = await this.bibleService.getPassageByReference(ref, translationCode);
+      const result = await this.bibleService.getPassageByReference(
+        ref,
+        translationCode,
+      );
+
+      if (!result) {
+        throw new NotFoundException('Passage not found');
+      }
+
+      return result;
     } catch (error) {
       if (error instanceof InvalidPassageError) {
         throw new BadRequestException(error.message);
@@ -303,11 +365,5 @@ export class BibleController {
 
       throw error;
     }
-
-    if (!result) {
-      throw new NotFoundException('Passage not found');
-    }
-
-    return result;
   }
 }

@@ -73,7 +73,9 @@ function parseSegment(segmentRaw: string): ParsedPassageSegment {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, ' ');
 
-  const verseRangeMatch = normalized.match(/^(.+?)\s*(\d+)\s*[:.]\s*(\d+)\s*-\s*(\d+)$/i);
+  const verseRangeMatch = normalized.match(
+    /^(.+?)\s*(\d+)\s*[:.]\s*(\d+)\s*-\s*(\d+)$/i,
+  );
   if (verseRangeMatch) {
     const bookSlug = resolveBookSlug(verseRangeMatch[1]);
     const chapter = toPositiveInt(verseRangeMatch[2], 'chapter');
@@ -81,7 +83,9 @@ function parseSegment(segmentRaw: string): ParsedPassageSegment {
     const toVerse = toPositiveInt(verseRangeMatch[4], 'toVerse');
 
     if (toVerse < fromVerse) {
-      throw new InvalidPassageError('toVerse must be greater than or equal to fromVerse.');
+      throw new InvalidPassageError(
+        'toVerse must be greater than or equal to fromVerse.',
+      );
     }
 
     return {
@@ -100,7 +104,9 @@ function parseSegment(segmentRaw: string): ParsedPassageSegment {
     const toChapter = toPositiveInt(chapterRangeMatch[3], 'toChapter');
 
     if (toChapter < fromChapter) {
-      throw new InvalidPassageError('toChapter must be greater than or equal to fromChapter.');
+      throw new InvalidPassageError(
+        'toChapter must be greater than or equal to fromChapter.',
+      );
     }
 
     return {

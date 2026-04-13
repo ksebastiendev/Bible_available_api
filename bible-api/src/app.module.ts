@@ -7,5 +7,5 @@ import { BibleModule } from './bible/bible.module';
   imports: [BibleModule],
   controllers: [AppController],
   providers: [AppService],
-}) 
+})
 export class AppModule {}

@@ -112,6 +112,85 @@ export class BibleService implements OnModuleDestroy {
     };
   }
 
+  async getBook(bookSlug: string, translationCode: string) {
+    const book = await this.prisma.book.findUnique({
+      where: { slug: bookSlug },
+      select: { id: true, slug: true, name: true, order: true, testament: true },
+    });
+
+    if (!book) {
+      return null;
+    }
+
+    const verses = await this.prisma.verse.findMany({
+      where: {
+        bookId: book.id,
+        texts: {
+          some: {
+            translation: {
+              code: translationCode,
+            },
+          },
+        },
+      },
+      select: {
+        chapter: true,
+        verse: true,
+        texts: {
+          where: {
+            translation: {
+              code: translationCode,
+            },
+          },
+          select: {
+            text: true,
+          },
+          take: 1,
+        },
+      },
+      orderBy: [{ chapter: 'asc' }, { verse: 'asc' }],
+    });
+
+    if (verses.length === 0) {
+      return null;
+    }
+
+    const chapters = verses.reduce<
+      Array<{
+        chapter: number;
+        verses: Array<{ verse: number; text: string | null }>;
+      }>
+    >((result, item) => {
+      const currentChapter = result[result.length - 1];
+
+      if (!currentChapter || currentChapter.chapter !== item.chapter) {
+        result.push({
+          chapter: item.chapter,
+          verses: [{ verse: item.verse, text: item.texts[0]?.text ?? null }],
+        });
+        return result;
+      }
+
+      currentChapter.verses.push({
+        verse: item.verse,
+        text: item.texts[0]?.text ?? null,
+      });
+
+      return result;
+    }, []);
+
+    return {
+      translationCode,
+      book: {
+        slug: book.slug,
+        name: book.name,
+        order: book.order,
+        testament: book.testament,
+      },
+      chapters,
+    };
+  }
+
   async getVerseByReference(reference: string, translationCode: string) {
     const parsed = parseReference(reference);
 

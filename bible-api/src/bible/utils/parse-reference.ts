@@ -47,7 +47,12 @@ export function parseReference(input: string): ParsedReference {
     const chapter = Number(verseMatch[2]);
     const verse = Number(verseMatch[3]);
 
-    if (!Number.isInteger(chapter) || !Number.isInteger(verse) || chapter < 1 || verse < 1) {
+    if (
+      !Number.isInteger(chapter) ||
+      !Number.isInteger(verse) ||
+      chapter < 1 ||
+      verse < 1
+    ) {
       throw new InvalidReferenceError(
         'Invalid chapter or verse number. Both must be positive integers.',
       );
@@ -57,7 +62,9 @@ export function parseReference(input: string): ParsedReference {
     const bookSlug = BOOK_ALIAS_TO_SLUG[bookKey] ?? bookKey;
 
     if (!bookSlug) {
-      throw new InvalidReferenceError(`Unknown book in reference: "${rawBook}".`);
+      throw new InvalidReferenceError(
+        `Unknown book in reference: "${rawBook}".`,
+      );
     }
 
     return { bookSlug, chapter, verse, type: 'verse' };
@@ -69,14 +76,18 @@ export function parseReference(input: string): ParsedReference {
     const chapter = Number(chapterMatch[2]);
 
     if (!Number.isInteger(chapter) || chapter < 1) {
-      throw new InvalidReferenceError('Invalid chapter number. It must be a positive integer.');
+      throw new InvalidReferenceError(
+        'Invalid chapter number. It must be a positive integer.',
+      );
     }
 
     const bookKey = normalizeBookKey(rawBook);
     const bookSlug = BOOK_ALIAS_TO_SLUG[bookKey] ?? bookKey;
 
     if (!bookSlug) {
-      throw new InvalidReferenceError(`Unknown book in reference: "${rawBook}".`);
+      throw new InvalidReferenceError(
+        `Unknown book in reference: "${rawBook}".`,
+      );
     }
 
     return { bookSlug, chapter, type: 'chapter' };
